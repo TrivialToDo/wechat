@@ -1,13 +1,13 @@
 # wechat
 Built to deal with wechat using wechaty
 
-Running:
+#### Running:
 
   npm i
   
   npm start
   
-Todo:
+#### Todo:
 
   配置后端url
   
@@ -15,7 +15,7 @@ Todo:
   
   不稳定问题：uncaughtException GError:
   
-Done:
+#### Done:
 
   自动接受好友请求
   
