@@ -144,7 +144,7 @@ async function onFriendship (friendship: Friendship) {
 
 
 const bot = WechatyBuilder.build({
-  name: 'ding-dong-bot',
+  name: 'config/ding-dong-bot',
   /**
    * You can specific `puppet` and `puppetOptions` here with hard coding:
    *
