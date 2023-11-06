@@ -19,7 +19,16 @@ import { FileBox }  from 'file-box'
 import qrcodeTerminal from 'qrcode-terminal'
 import { FriendshipType } from 'wechaty-puppet/dist/esm/src/schemas/friendship';
 
-const url = 'http://127.0.0.1:8000/wechat/test';
+let url : string;
+if (process.env.DOCKER === 'production'){
+  url = 'http://backend/wechat/receive_msg';
+} else {
+  url = 'http://127.0.0.1:8000/wechat/receive_msg';
+}
+
+//@ts-ignore
+import fetch from 'node-fetch' 
+
 async function sendPostRequest(url: string, uid: any, content: any, name:any, date:any): Promise<any> {
   const postData = {
       name: name,
@@ -28,16 +37,23 @@ async function sendPostRequest(url: string, uid: any, content: any, name:any, da
       date: date
     };
     
-  const requestOptions: RequestInit = {
+  // const requestOptions: RequestInit = {
+  //   method: 'POST',
+  //   headers: {
+  //     'Content-Type': 'application/json'
+  //   },
+  //   body: JSON.stringify(postData)
+  // };
+
+  return fetch(url, {
     method: 'POST',
-    headers: {
+    headers: {  
+      'Accept': 'application/json',  
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(postData)
-  };
-
-  return fetch(url, requestOptions)
-    .then(response => {
+  })
+    .then((response: any) => {
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }

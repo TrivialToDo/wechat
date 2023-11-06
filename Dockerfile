@@ -1,17 +1,17 @@
-# ʹ�ùٷ� Node.js ������Ϊ��������
+# 使用官方 Node.js 镜像作为基础镜像
 FROM node:16
 
-# ���ù���Ŀ¼
+# 设置工作目录
 WORKDIR /app
-
-# ����Ӧ�ó�����뵽����Ŀ¼
+ENV DOCKER=production
+# 复制应用程序代码到工作目录
 COPY . .
 
-# ��װӦ�ó����������
+# 安装应用程序的依赖项
 RUN npm install
 
-# ��¶Ӧ�ó������еĶ˿ڣ������Ҫ��
+# 暴露应用程序运行的端口（如果需要）
 # EXPOSE 3000
 
-# ��������Ӧ�ó��������
+# 定义启动应用程序的命令
 CMD [ "npm", "start" ]
