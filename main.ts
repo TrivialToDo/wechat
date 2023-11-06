@@ -30,12 +30,7 @@ if (process.env.DOCKER === 'production'){
 import fetch from 'node-fetch' 
 
 async function sendPostRequest(url: string, uid: any, content: any, name:any, date:any): Promise<any> {
-  const postData = {
-      name: name,
-      id: uid,
-      content: content,
-      date: date
-    };
+
     
   // const requestOptions: RequestInit = {
   //   method: 'POST',
@@ -44,12 +39,34 @@ async function sendPostRequest(url: string, uid: any, content: any, name:any, da
   //   },
   //   body: JSON.stringify(postData)
   // };
-
+  let token:string = "";
+  let response = await fetch('http://127.0.0.1:8000/token', {
+    method: 'GET'
+  });
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+  let data = await response.json();
+  token = await data.data.token;
+  const postData = {
+    name: name,
+    id: uid,
+    content: content,
+    date: date,
+    csrfmiddlewaretoken: token
+  };
+  // if (!response.ok) {
+  //   throw new Error('Network response was not ok');
+  // }
+  // token = response.json().data.token;
+  // console.log(response.json())
   return fetch(url, {
     method: 'POST',
     headers: {  
       'Accept': 'application/json',  
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'X-CSRFToken': token,
+      'Cookie': 'csrftoken='+ token
     },
     body: JSON.stringify(postData)
   })
@@ -92,27 +109,27 @@ async function onMessage (msg: Message) {
   log.info('StarterBot', msg.toString())
   await sendPostRequest(url, talker.id, text, name, date)
   .then(data => {
-      if (data.type == "text"){
-        msg.say(data.content)
+      if (data.data.type == "text"){
+        msg.say(data.data.content)
       }
-      else if(data.type == "url"){
-        const fileBox = FileBox.fromUrl(data.url)
+      else if(data.data.type == "url"){
+        const fileBox = FileBox.fromUrl(data.data.url)
         msg.say(fileBox)
       }
-      else if(data.type == "local"){
-        const fileBox = FileBox.fromFile(data.routine)
+      else if(data.data.type == "local"){
+        const fileBox = FileBox.fromFile(data.data.routine)
         msg.say(fileBox)
       }
-      else if (data.type == "image"){
+      else if (data.data.type == "image"){
         // const fileBox = FileBox.fromUrl(data.img_url)
         const fileBox = FileBox.fromFile('0.5.png')
         msg.say(fileBox)
       }
-      else if (data.type == "file"){
+      else if (data.data.type == "file"){
         const fileBox = FileBox.fromFile('1.txt')
         talker.say(fileBox)
       }
-      else if (data.type == "audio"){
+      else if (data.data.type == "audio"){
         msg.say("this is a audio")
       }
       else{
