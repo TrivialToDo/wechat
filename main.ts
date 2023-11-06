@@ -85,7 +85,7 @@ function onLogout (user: Contact) {
 }
 
 async function onMessage (msg: Message) {
-  let talker: any = msg.from();      //
+  let talker: any = msg.talker();      //
   const text = msg.text();       //消息内容
   const name = talker.name();  //昵称
   const date = msg.date();         //时间
@@ -144,7 +144,7 @@ async function onFriendship (friendship: Friendship) {
 
 
 const bot = WechatyBuilder.build({
-  name: 'ding-dong-bot',
+  name: 'tmp/ding-dong-bot',
   /**
    * You can specific `puppet` and `puppetOptions` here with hard coding:
    *

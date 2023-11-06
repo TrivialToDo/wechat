@@ -11,7 +11,7 @@ COPY . .
 RUN npm install
 
 # 暴露应用程序运行的端口（如果需要）
-# EXPOSE 3000
+EXPOSE 3000
 
 # 定义启动应用程序的命令
 CMD [ "npm", "start" ]

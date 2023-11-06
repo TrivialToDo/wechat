@@ -1,7 +1,11 @@
 apps:
-  - script : 
+  - script : main.ts
     name : wechat-bot
     env_production:
       NODE_ENV: production
       HOST: localhost
       PORT: 8888
+# pm2 start pm2.yml --env production
+# pm2 list
+# pm2 restart|stop 
+# pm2 log wechat-bot
