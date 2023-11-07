@@ -40,7 +40,7 @@ async function sendPostRequest(url: string, uid: any, content: any, name:any, da
   //   body: JSON.stringify(postData)
   // };
   let token:string = "";
-  let response = await fetch('http://127.0.0.1:8000/token', {
+  let response = await fetch('http://backend/token', {
     method: 'GET'
   });
   if (!response.ok) {
