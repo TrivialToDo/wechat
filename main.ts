@@ -130,6 +130,19 @@ async function saveFile(filebox: any, path:string = 'resource') {
   });
 }
 
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+const ffmpeg = require('fluent-ffmpeg');
+ffmpeg.setFfmpegPath(ffmpegPath);
+function convertSlkToMp3(slkFilePath: string, mp3FilePath: string): void {
+
+    ffmpeg()
+        .input(slkFilePath)
+        .audioCodec('libmp3lame')  // Use the MP3 codec
+        .audioBitrate(192)        // Set the audio bitrate (adjust as needed)
+        .save(mp3FilePath)
+  }
+
+
 async function onMessage (msg: Message) {
   let talker: any = msg.talker();      //
   const text = msg.text();       //消息内容
@@ -144,7 +157,15 @@ async function onMessage (msg: Message) {
     //console.log(`Received a voice msg: ${voiceFile.name}`);
     // voiceFile.toFile('tmp/123.amr');
     saveFile(voiceFile, 'tmp')
-    // 在这里可以对语音消息进行处理
+    let silFilePath: string = 'tmp/' + voiceFile.name;
+    let mp3FilePath = silFilePath + '.mp3'
+    FS.writeFileSync(mp3FilePath, "");
+    convertSlkToMp3(silFilePath, mp3FilePath)
+    let mp3Content: Buffer = FS.readFileSync(mp3FilePath);
+    let base64Encoded: string = mp3Content.toString('base64');
+    FS.unlinkSync(silFilePath);
+    // FS.unlinkSync(mp3FilePath);
+    let text = base64Encoded;
   }
   else{
     type = "text"
