@@ -5,12 +5,14 @@
     "author": "haoda",
     "license": "Apache-2.0",
     "dependencies": {
+        "@types/express": "^4.17.21",
+        "express": "^4.18.2",
+        "node-fetch": "2.6.1",
         "pm2": "^5.3.0",
         "qrcode-terminal": "^0.12.0",
         "wechaty": "^1.19.10",
         "wechaty-puppet": "^1.19.6",
-        "wechaty-puppet-padlocal": "^1.11.18",
-        "node-fetch": "2.6.1"
+        "wechaty-puppet-padlocal": "^1.11.18"
     },
     "devDependencies": {
         "@types/qrcode-terminal": "^0.12.1",

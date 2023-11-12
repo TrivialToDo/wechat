@@ -19,11 +19,23 @@ import { FileBox }  from 'file-box'
 import qrcodeTerminal from 'qrcode-terminal'
 import { FriendshipType } from 'wechaty-puppet/dist/esm/src/schemas/friendship';
 
+// to convert audio message
+import FS from 'fs';
+import PATH from 'path'
+import { Readable } from 'stream';
+
+// post url 
 let url : string;
 if (process.env.DOCKER === 'production'){
   url = 'http://backend/wechat/receive_msg';
 } else {
   url = 'http://127.0.0.1:8000/wechat/receive_msg';
+}
+let token_url : string;
+if (process.env.DOCKER === 'production'){
+  token_url = 'http://backend/token';
+} else {
+  token_url = 'http://127.0.0.1:8000/token';
 }
 
 //@ts-ignore
@@ -40,7 +52,7 @@ async function sendPostRequest(url: string, uid: any, content: any, name:any, da
   //   body: JSON.stringify(postData)
   // };
   let token:string = "";
-  let response = await fetch('http://backend/token', {
+  let response = await fetch(token_url, {
     method: 'GET'
   });
   if (!response.ok) {
@@ -60,6 +72,7 @@ async function sendPostRequest(url: string, uid: any, content: any, name:any, da
   // }
   // token = response.json().data.token;
   // console.log(response.json())
+  
   return fetch(url, {
     method: 'POST',
     headers: {  
@@ -101,12 +114,35 @@ function onLogout (user: Contact) {
   log.info('StarterBot', '%s logout', user)
 }
 
+// https://github.com/fuergaosi233/wechat-chatgpt/issues/375
+async function saveFile(filebox: any, path:string = 'resource') {
+  const audioReadStream = Readable.from(filebox.stream);
+  console.log(filebox.name)
+  const filePath = PATH.join(path, filebox.name);
+  const writeStream = FS.createWriteStream(filePath);
+
+  audioReadStream.pipe(writeStream);
+
+  await new Promise((resolve, reject) => {
+    writeStream.on('finish', resolve);
+    writeStream.on('error', reject);
+  });
+}
+
 async function onMessage (msg: Message) {
   let talker: any = msg.talker();      //
   const text = msg.text();       //消息内容
   const name = talker.name();  //昵称
   const date = msg.date();         //时间
   log.info('StarterBot', msg.toString())
+  // console.log(bot.Message.Type)
+  if (msg.type() === bot.Message.Type.Audio) {
+    const voiceFile = await msg.toFileBox();
+    //console.log(`Received a voice msg: ${voiceFile.name}`);
+    // voiceFile.toFile('tmp/123.amr');
+    saveFile(voiceFile, 'tmp')
+    // 在这里可以对语音消息进行处理
+  }
   await sendPostRequest(url, talker.id, text, name, date)
   .then(data => {
       if (data.data.type == "text"){
@@ -149,10 +185,23 @@ async function onMessage (msg: Message) {
 
 async function onFriendship (friendship: Friendship) {
     try{
-        await friendship.accept()
-        let friend = friendship.contact()
         const hello_word:string = "你好! 这里是TrivialTodo小助手"
-        friend.say(hello_word)
+        console.log("abc")
+        await friendship.accept()
+        let friend = await friendship.contact()
+        let label = await friend.alias()
+        console.log('###', typeof label)
+        if (label == "" || typeof label === undefined || typeof label == null)
+        {
+          let friends = await bot.Contact.findAll()
+          let friend_num = friends.length
+          let currentTimestamp: number = Date.now();
+          friend.alias('#user_' + (String)(friend_num) + '_accepted_on_' + (String)(currentTimestamp))
+          friend.say(hello_word)
+        }
+        else{
+          friend.say(hello_word)
+        }
     }
     catch (e) {
         console.error(e)
@@ -202,6 +251,94 @@ bot.on('logout',  onLogout)
 bot.on('message', onMessage)
 bot.on('friendship', onFriendship)
 
+// receive request from backend
+// https://github.com/fuergaosi233/wechat-chatgpt/issues/375
+import express, { Request, Response } from 'express';
+import { request } from 'http';
+// import { Contact } from 'wechaty-puppet/types';
+
+
+// app.listen(port, () => {
+//   console.log(`Server is running at http://localhost:${port}`);
+// });
+
+
+
 bot.start()
   .then(() => log.info('StarterBot', 'Starter Bot Started.'))
   .catch(e => log.error('StarterBot', e))
+  .then(() =>{
+  const app = express();
+  const port = 3000;
+  app.use(express.json());
+
+  app.get('/all_contact', async (req: Request, res: Response) => {
+    let friends = await bot.Contact.findAll()
+    for (const contact of friends) {
+      let label = await contact.alias()
+      if (typeof label === undefined)
+        console.log(contact.name(), '#', 'label is not defined')
+      else
+        console.log(contact.name(), '#', label);
+    }
+    res.json({ code: 200, data: {msg : "Succeed"} });
+  });
+
+  app.post('/send_msg_by_name', async(req: Request, res: Response) => {
+    const requestBody = req.body;
+
+    let id = requestBody.id
+    let content = requestBody.content
+    let talker = await bot.Contact.find({name : id})
+    if (talker instanceof bot.Contact){
+      await talker?.say(content)
+      res.json({ code: 200, data: {msg : "Succeed"} });
+    } else{
+      console.log('Error')
+      res.json({ code: 404, data: {msg : "User not found"} });
+    }
+  });
+
+  app.post('/change_alias', async(req: Request, res: Response) => {
+    const requestBody = req.body;
+
+    let fname : string = requestBody.id
+    let nalias : string = requestBody.content
+    let talker = await bot.Contact.find({name : fname})
+    if(talker)
+    {
+      talker.alias("新备注")
+      res.json({ code: 200, data: {msg : "Succeed"} });
+    }
+    else{
+      console.log('Error')
+      res.json({ code: 404, data: {msg : "User not found"} });
+    }
+    // if (talker instanceof bot.Contact){
+    //   (talker as Contact).alias("新备注")
+    //   res.json({ code: 200, data: {msg : "Succeed"} });
+    // } else{
+    //   console.log('Error')
+    //   res.json({ code: 404, data: {msg : "User not found"} });
+    // }
+  });
+
+  app.post('/send_msg', async(req: Request, res: Response) => {
+    const requestBody = req.body;
+
+    let id = requestBody.id
+    let content = requestBody.content
+    let talker = await bot.Contact.find({alias : id})
+    if (talker instanceof bot.Contact){
+      await talker?.say(content)
+      res.json({ code: 200, data: {msg : "Succeed"} });
+    } else{
+      console.log('Error')
+      res.json({ code: 404, data: {msg : "User not found"} });
+    }
+  });
+
+    app.listen(port, () => {
+      console.log(`Server is running at http://localhost:${port}`);
+    });}
+  )
