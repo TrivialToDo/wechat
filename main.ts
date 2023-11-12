@@ -41,7 +41,7 @@ if (process.env.DOCKER === 'production'){
 //@ts-ignore
 import fetch from 'node-fetch' 
 
-async function sendPostRequest(url: string, uid: any, content: any, name:any, date:any): Promise<any> {
+async function sendPostRequest(url: string, uid: any, content: any, name:any, date:any, type: any): Promise<any> {
 
     
   // const requestOptions: RequestInit = {
@@ -65,7 +65,8 @@ async function sendPostRequest(url: string, uid: any, content: any, name:any, da
     id: uid,
     content: content,
     date: date,
-    csrfmiddlewaretoken: token
+    csrfmiddlewaretoken: token,
+    type: type
   };
   // if (!response.ok) {
   //   throw new Error('Network response was not ok');
@@ -136,14 +137,19 @@ async function onMessage (msg: Message) {
   const date = msg.date();         //时间
   log.info('StarterBot', msg.toString())
   // console.log(bot.Message.Type)
+  let type: string = "undefined"
   if (msg.type() === bot.Message.Type.Audio) {
+    type = "audio"
     const voiceFile = await msg.toFileBox();
     //console.log(`Received a voice msg: ${voiceFile.name}`);
     // voiceFile.toFile('tmp/123.amr');
     saveFile(voiceFile, 'tmp')
     // 在这里可以对语音消息进行处理
   }
-  await sendPostRequest(url, talker.id, text, name, date)
+  else{
+    type = "text"
+  }
+  await sendPostRequest(url, talker.id, text, name, date, type)
   .then(data => {
       if (data.data.type == "text"){
         msg.say(data.data.content)
