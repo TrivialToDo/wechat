@@ -145,7 +145,7 @@ function convertSlkToMp3(slkFilePath: string, mp3FilePath: string): void {
 
 async function onMessage (msg: Message) {
   let talker: any = msg.talker();      //
-  const text = msg.text();       //消息内容
+  let text = msg.text();       //消息内容
   const name = talker.name();  //昵称
   const date = msg.date();         //时间
   log.info('StarterBot', msg.toString())
@@ -165,11 +165,23 @@ async function onMessage (msg: Message) {
     let base64Encoded: string = mp3Content.toString('base64');
     FS.unlinkSync(silFilePath);
     // FS.unlinkSync(mp3FilePath);
-    let text = base64Encoded;
+    text = base64Encoded;
   }
-  else{
+  else if(msg.type() == bot.Message.Type.Image)
+  {
+    type = "image"
+    const imageFile = await msg.toFileBox();
+    let imagePath = 'tmp/' + imageFile.name
+    await imageFile.toFile(imagePath)
+    let imgContent: Buffer = FS.readFileSync(imagePath);
+    let base64Encoded: string = imgContent.toString('base64');
+    // FS.unlinkSync(mp3FilePath);
+    text = base64Encoded;
+  }
+  else {
     type = "text"
   }
+  console.log(text)
   await sendPostRequest(url, talker.id, text, name, date, type)
   .then(data => {
       if (data.data.type == "text"){
