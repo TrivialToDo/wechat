@@ -144,6 +144,9 @@ function convertSlkToMp3(slkFilePath: string, mp3FilePath: string): void {
 
 
 async function onMessage (msg: Message) {
+  if (msg.self()){
+    return
+  }
   let talker: any = msg.talker();      //
   let text = msg.text();       //消息内容
   const name = talker.name();  //昵称

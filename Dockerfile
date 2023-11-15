@@ -13,5 +13,10 @@ RUN npm install
 # 暴露应用程序运行的端口（如果需要）
 EXPOSE 3000
 
+ENV WECHATY_PUPPET_PADLOCAL_TOKEN=puppet_padlocal_fb4864de02d44298be078daaa18c57d4
+ENV WECHATY_PUPPET_SERVER_PORT=8788
+ENV WECHATY_PUPPET=wechaty-puppet-padlocal
+ENV WECHATY_LOG=verbose
+
 # 定义启动应用程序的命令
 CMD [ "npm", "start" ]
