@@ -370,7 +370,7 @@ bot.start()
 
     let id = requestBody.id
     let content = requestBody.content
-    let talker = await bot.Contact.find({alias : id})
+    let talker = await bot.Contact.find({id : id})
     if (talker instanceof bot.Contact){
       await talker?.say(content)
       res.json({ code: 200, data: {msg : "Succeed"} });
