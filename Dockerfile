@@ -8,7 +8,7 @@ ENV DOCKER=production
 COPY . .
 
 # 安装应用程序的依赖项
-RUN npm install
+RUN npm install -g cnpm --registry=https://registry.npm.taobao.org
 
 # 暴露应用程序运行的端口（如果需要）
 EXPOSE 3000
