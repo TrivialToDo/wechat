@@ -147,6 +147,9 @@ async function onMessage (msg: Message) {
   if (msg.self()){
     return
   }
+  if(msg.talker().id == "weixin"){
+    return
+  }
   let talker: any = msg.talker();      //
   let text = msg.text();       //消息内容
   const name = talker.name();  //昵称
