@@ -41,7 +41,7 @@ if (process.env.DOCKER === 'production'){
 //@ts-ignore
 import fetch from 'node-fetch' 
 
-async function sendPostRequest(url: string, uid: any, content: any, name:any, date:any, type: any): Promise<any> {
+async function sendPostRequest(url: string, uid: any, content: any, name:any, date:any, type: any, isRoom: any, roomid: any): Promise<any> {
 
     
   // const requestOptions: RequestInit = {
@@ -64,9 +64,11 @@ async function sendPostRequest(url: string, uid: any, content: any, name:any, da
     name: name,
     id: uid,
     content: content,
-    date: date,
+    data: date,
     csrfmiddlewaretoken: token,
-    type: type
+    type: type,
+    isRoom: isRoom,
+    roomid: roomid
   };
   // if (!response.ok) {
   //   throw new Error('Network response was not ok');
@@ -154,6 +156,15 @@ async function onMessage (msg: Message) {
   let text = msg.text();       //消息内容
   const name = talker.name();  //昵称
   const date = msg.date();         //时间
+  let room = msg.room();
+  let isRoom = false;
+  let roomid = "nogroup";
+  if (room){
+    isRoom = true;
+    roomid = msg.room().id;
+  } else{
+
+  }
   log.info('StarterBot', msg.toString())
   // console.log(bot.Message.Type)
   let type: string = "undefined"
@@ -188,7 +199,7 @@ async function onMessage (msg: Message) {
     type = "text"
   }
   console.log(text)
-  await sendPostRequest(url, talker.id, text, name, date, type)
+  await sendPostRequest(url, talker.id, text, name, date, type, isRoom, roomid)
   .then(data => {
       if (data.data.type == "text"){
         msg.say(data.data.content)
@@ -329,10 +340,30 @@ bot.start()
     res.json({ code: 200, data: {msg : "Succeed"} });
   });
 
+  app.get('/all_room', async (req: Request, res: Response) => {
+    let rooms = await bot.Room.findAll()
+
+    let contactIds: string[] = rooms.map(room => room.id);
+    res.json({ code: 200, data: {contacts : contactIds} });
+  }); 
+
+  app.get('/all_contact_in_room', async (req: Request, res: Response) => {
+    let roomid : string = req.query.roomid as string;
+    let room = await bot.Room.find({id: roomid})
+    let contacts = await room.memberAll();
+    let contactIds: string[] = contacts.map(contact => contact.id);
+    if (contactIds.length == 0){
+      res.json({ code: 404, data: {} });
+    }
+    else{
+      res.json({ code: 200, data: {contacts : contactIds} });
+    }
+  });
+
   app.post('/send_msg_by_name', async(req: Request, res: Response) => {
     const requestBody = req.body;
 
-    let id = requestBody.id
+    let id = requestBody.id 
     let content = requestBody.content
     let talker = await bot.Contact.find({name : id})
     if (talker instanceof bot.Contact){
