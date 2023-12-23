@@ -224,6 +224,9 @@ async function onMessage (msg: Message) {
       else if (data.data.type == "audio"){
         msg.say("this is a audio")
       }
+      else if (data.data.type == "noreply"){
+        
+      }
       else{
         msg.say("Error!")
       }
