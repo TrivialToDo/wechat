@@ -64,7 +64,7 @@ async function sendPostRequest(url: string, uid: any, content: any, name:any, da
     name: name,
     id: uid,
     content: content,
-    data: date,
+    date: date,
     csrfmiddlewaretoken: token,
     type: type,
     isRoom: isRoom,
