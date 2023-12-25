@@ -6,7 +6,7 @@
 // https://stackoverflow.com/a/42817956/1123955
 // https://github.com/motdotla/dotenv/issues/89#issuecomment-587753552
 import 'dotenv/config.js'
-
+import * as fs from 'fs';
 import {
   Contact,
   Friendship,
@@ -214,7 +214,16 @@ async function onMessage (msg: Message) {
       }
       else if (data.data.type == "image"){
         // const fileBox = FileBox.fromUrl(data.img_url)
-        const fileBox = FileBox.fromFile('0.5.png')
+
+        const base64String = data.data.content
+        const binaryData = Buffer.from(base64String, 'base64');
+
+        const filePath = base64String.substring(0, 10).replace(/\//g, 'a') + ".png";
+
+        // 将二进制数据保存为文件
+        fs.writeFileSync(filePath, binaryData, 'binary');
+        const fileBox = FileBox.fromFile(filePath)
+        
         msg.say(fileBox)
       }
       else if (data.data.type == "file"){
